@@ -1,0 +1,35 @@
+name: CI/CD Automate Deployment
+
+on:
+  push:
+    branches:
+      - deploy
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout del código
+      uses: actions/checkout@v3
+
+    - name: Ejecutar comandos de despliegue en ElServidor vía SSH
+      uses: appleboy/ssh-action@v0.1.10
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_KEY }}
+        script: |
+          echo "🚀 Conectado con éxito a ElServidor..."
+          
+          echo "📥 Actualizando repositorios..."
+          cd /repository/user16/front_despacho && git pull origin deploy
+          cd /repository/user16/back-Despachos_SpringBoot && git pull origin deploy
+          cd /repository/user16/back-Ventas_SpringBoot && git pull origin deploy
+          
+          echo "🔄 Reconstruyendo y levantando la arquitectura con Docker Compose..."
+          cd /repository/user16
+          docker-compose down
+          docker-compose up -d --build
+          
+          echo "✅ ¡Despliegue continuo finalizado con éxito!"
